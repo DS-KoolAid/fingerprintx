@@ -125,7 +125,9 @@ func parseRPCInfo(response []byte, lookupResponse *plugins.ServiceRPC) error {
 
 	for valueFollows == 1 {
 		tmp := plugins.RPCB{}
-		if len(response) < 0x20 {
+
+		// Need at least 12 bytes for program (4) + version (4) + networkIDLen (4)
+		if len(response) < 12 {
 			return nil
 		}
 
@@ -138,6 +140,9 @@ func parseRPCInfo(response []byte, lookupResponse *plugins.ServiceRPC) error {
 			networkIDLen++
 		}
 		response = response[4:]
+		if len(response) < networkIDLen+4 {
+			return nil
+		}
 		tmp.Protocol = string(response[0:networkIDLen])
 		response = response[networkIDLen:]
 		addressLen := int(binary.BigEndian.Uint32(response[0:4]))
@@ -145,6 +150,9 @@ func parseRPCInfo(response []byte, lookupResponse *plugins.ServiceRPC) error {
 			addressLen++
 		}
 		response = response[4:]
+		if len(response) < addressLen+4 {
+			return nil
+		}
 		tmp.Address = string(response[0:addressLen])
 		response = response[addressLen:]
 		ownerLen := int(binary.BigEndian.Uint32(response[0:4]))
@@ -152,6 +160,9 @@ func parseRPCInfo(response []byte, lookupResponse *plugins.ServiceRPC) error {
 			ownerLen++
 		}
 		response = response[4:]
+		if len(response) < ownerLen+4 {
+			return nil
+		}
 		tmp.Owner = string(response[0:ownerLen])
 		response = response[ownerLen:]
 
